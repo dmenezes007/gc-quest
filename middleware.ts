@@ -28,11 +28,6 @@ export async function middleware(request: NextRequest) {
     return guardWithRoleMetadata(request, {
       signInPath: '/',
       roleRules: {
-        '/dashboard': 'USER',
-        '/knowledge': 'USER',
-        '/missions': 'USER',
-        '/badges': 'USER',
-        '/profile': 'USER',
         '/gestor': 'GESTOR',
         '/admin': 'ADMIN',
       },
