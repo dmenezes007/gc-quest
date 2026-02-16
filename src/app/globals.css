@@ -1,8 +1,14 @@
 @import "tailwindcss";
 
 :root {
-  --background: #020617;
-  --foreground: #e2e8f0;
+  --background: #02061b;
+  --foreground: #dbeafe;
+  --kq-surface: #0a122b;
+  --kq-surface-2: #0e1732;
+  --kq-border: #1d2a4a;
+  --kq-cyan: #1dd6ff;
+  --kq-violet: #b24dff;
+  --kq-text-dim: #7f8dad;
 }
 
 @theme inline {
@@ -10,6 +16,7 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-orbitron);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -23,4 +30,26 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+.kq-heading {
+  font-family: var(--font-orbitron), var(--font-geist-sans), sans-serif;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+}
+
+.kq-panel {
+  border: 1px solid var(--kq-border);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--kq-surface-2) 94%, black), var(--kq-surface));
+  border-radius: 14px;
+}
+
+.kq-pill {
+  border: 1px solid color-mix(in srgb, var(--kq-cyan) 25%, var(--kq-border));
+  background: color-mix(in srgb, var(--kq-cyan) 10%, transparent);
+  color: var(--kq-cyan);
+}
+
+.kq-muted {
+  color: var(--kq-text-dim);
 }
