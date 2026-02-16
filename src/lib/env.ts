@@ -18,7 +18,16 @@ export function getRuntimeEnv(): RuntimeEnv {
     return cachedEnv;
   }
 
-  const parsed = runtimeEnvSchema.safeParse(process.env);
+  const rawEnv = {
+    NODE_ENV: process.env.NODE_ENV,
+    DATABASE_URL: process.env.DATABASE_URL,
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    E2E_MOCK_AUTH: process.env.E2E_MOCK_AUTH,
+    LOG_LEVEL: process.env.LOG_LEVEL,
+  };
+
+  const parsed = runtimeEnvSchema.safeParse(rawEnv);
   if (!parsed.success) {
     const issue = parsed.error.issues[0];
     const path = issue?.path.join('.') || 'env';
