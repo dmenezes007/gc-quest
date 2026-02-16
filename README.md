@@ -1,36 +1,81 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Knowledge Gamification
 
-## Getting Started
+Aplicação Next.js com gamificação de conhecimento (XP, badges, níveis, leaderboard), autenticação Supabase e persistência com Prisma/PostgreSQL.
 
-First, run the development server:
+## Requisitos
+
+- Node.js 20+
+- npm 10+
+- Banco PostgreSQL acessível
+- Projeto Supabase com URL e anon key
+
+## Configuração local
+
+1. Instale dependências:
+
+```bash
+npm install
+```
+
+2. Crie variáveis de ambiente a partir do exemplo:
+
+```bash
+cp .env.example .env.local
+```
+
+3. Preencha os valores em `.env.local`:
+
+- `DATABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- opcional: `LOG_LEVEL`
+
+4. Gere cliente Prisma (se necessário):
+
+```bash
+npx prisma generate
+```
+
+5. Rode em desenvolvimento:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Scripts
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- `npm run dev`: ambiente local
+- `npm run build`: build de produção
+- `npm run start`: servidor de produção
+- `npm run lint`: validação de lint
+- `npm run test`: testes unitários (Vitest, modo watch)
+- `npm run test -- --run`: testes unitários em execução única
+- `npm run e2e`: testes E2E (Playwright)
+- `npm run db:seed`: seed de dados com Prisma
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Publicação no GitHub
 
-## Learn More
+Checklist antes de subir:
 
-To learn more about Next.js, take a look at the following resources:
+1. `npm run lint`
+2. `npm run build`
+3. Confirmar que `.env.local` não está versionado
+4. Garantir que somente `.env.example` foi commitado
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Deploy na Vercel
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Importe o repositório na Vercel.
+2. Framework preset: `Next.js`.
+3. Defina as variáveis de ambiente em **Project Settings → Environment Variables**:
+	- `DATABASE_URL`
+	- `NEXT_PUBLIC_SUPABASE_URL`
+	- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+	- `LOG_LEVEL` (opcional, recomendado: `info`)
+4. Build command: `npm run build`.
+5. Install command: `npm install`.
+6. Output: padrão do Next.js (sem ajuste manual).
 
-## Deploy on Vercel
+### Observações de produção
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `E2E_MOCK_AUTH` é apenas para testes E2E; não habilitar em produção.
+- Se usar migrações Prisma no deploy, execute em pipeline/CI antes de promover para produção.

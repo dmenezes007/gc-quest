@@ -1,0 +1,270 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  MANAGER
+  ADMIN
+}
+
+enum KnowledgeType {
+  ARTICLE
+  GUIDE
+  VIDEO
+  TEMPLATE
+  POLICY
+  FAQ
+}
+
+enum Criticality {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum ValidationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum MissionStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  EXPIRED
+}
+
+model User {
+  id          String        @id @default(uuid()) @db.Uuid
+  email       String        @unique
+  name        String
+  role        Role          @default(USER)
+  totalXp     Int           @default(0)
+  sectorId    String?       @db.Uuid
+  levelId     String?       @db.Uuid
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  sector      Sector?       @relation(fields: [sectorId], references: [id], onDelete: SetNull)
+  level       Level?        @relation(fields: [levelId], references: [id], onDelete: SetNull)
+
+  authoredKnowledgeItems KnowledgeItem[] @relation("KnowledgeAuthor")
+  validations            Validation[]    @relation("KnowledgeValidator")
+  xpEvents               XpEvent[]
+  userBadges             UserBadge[]
+  userMissions           UserMission[]
+
+  @@index([sectorId])
+  @@index([levelId])
+  @@index([totalXp])
+  @@index([role, totalXp])
+  @@index([sectorId, totalXp])
+  @@index([levelId, totalXp])
+  @@index([createdAt])
+  @@map("users")
+}
+
+model Sector {
+  id          String          @id @default(uuid()) @db.Uuid
+  name        String          @unique
+  description String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  users          User[]
+  knowledgeItems KnowledgeItem[]
+  missions       Mission[]
+  xpEvents       XpEvent[]
+
+  @@map("sectors")
+}
+
+model Level {
+  id          String   @id @default(uuid()) @db.Uuid
+  code        String   @unique
+  name        String
+  minXp       Int
+  maxXp       Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users User[]
+
+  @@index([minXp])
+  @@map("levels")
+}
+
+model KnowledgeItem {
+  id           String           @id @default(uuid()) @db.Uuid
+  title        String
+  summary      String?
+  content      String
+  type         KnowledgeType
+  criticality  Criticality      @default(MEDIUM)
+  tags         String[]
+  authorId     String           @db.Uuid
+  sectorId     String?          @db.Uuid
+  publishedAt  DateTime?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  author       User             @relation("KnowledgeAuthor", fields: [authorId], references: [id], onDelete: Restrict)
+  sector       Sector?          @relation(fields: [sectorId], references: [id], onDelete: SetNull)
+  validations  Validation[]
+  xpEvents     XpEvent[]
+
+  @@index([authorId])
+  @@index([sectorId])
+  @@index([type])
+  @@index([criticality])
+  @@index([publishedAt])
+  @@index([createdAt])
+  @@index([authorId, createdAt])
+  @@index([sectorId, type, criticality])
+  @@map("knowledge_items")
+}
+
+model Validation {
+  id               String            @id @default(uuid()) @db.Uuid
+  knowledgeItemId  String            @db.Uuid
+  validatorId      String            @db.Uuid
+  status           ValidationStatus  @default(PENDING)
+  notes            String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  knowledgeItem    KnowledgeItem     @relation(fields: [knowledgeItemId], references: [id], onDelete: Cascade)
+  validator        User              @relation("KnowledgeValidator", fields: [validatorId], references: [id], onDelete: Restrict)
+  xpEvents         XpEvent[]
+
+  @@index([knowledgeItemId])
+  @@index([validatorId])
+  @@index([status])
+  @@index([status, createdAt])
+  @@index([validatorId, status])
+  @@index([knowledgeItemId, status])
+  @@unique([knowledgeItemId, validatorId])
+  @@map("validations")
+}
+
+model XpEvent {
+  id              String         @id @default(uuid()) @db.Uuid
+  userId          String         @db.Uuid
+  points          Int
+  reason          String
+  knowledgeItemId String?        @db.Uuid
+  missionId       String?        @db.Uuid
+  validationId    String?        @db.Uuid
+  sectorId        String?        @db.Uuid
+  createdAt       DateTime       @default(now())
+
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  knowledgeItem   KnowledgeItem? @relation(fields: [knowledgeItemId], references: [id], onDelete: SetNull)
+  mission         Mission?       @relation(fields: [missionId], references: [id], onDelete: SetNull)
+  validation      Validation?    @relation(fields: [validationId], references: [id], onDelete: SetNull)
+  sector          Sector?        @relation(fields: [sectorId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([knowledgeItemId])
+  @@index([missionId])
+  @@index([validationId])
+  @@index([sectorId])
+  @@index([createdAt])
+  @@index([userId, createdAt])
+  @@index([sectorId, createdAt])
+  @@index([missionId, createdAt])
+  @@map("xp_events")
+}
+
+model Badge {
+  id            String      @id @default(uuid()) @db.Uuid
+  code          String      @unique
+  name          String
+  description   String?
+  criticality   Criticality @default(LOW)
+  xpReward      Int         @default(0)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  userBadges    UserBadge[]
+
+  @@index([criticality])
+  @@map("badges")
+}
+
+model UserBadge {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @db.Uuid
+  badgeId     String   @db.Uuid
+  grantedAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge       Badge    @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, badgeId])
+  @@index([userId])
+  @@index([badgeId])
+  @@index([grantedAt])
+  @@index([userId, grantedAt])
+  @@index([badgeId, grantedAt])
+  @@map("user_badges")
+}
+
+model Mission {
+  id            String         @id @default(uuid()) @db.Uuid
+  code          String         @unique
+  title         String
+  description   String?
+  criticality   Criticality    @default(MEDIUM)
+  xpReward      Int            @default(0)
+  sectorId      String?        @db.Uuid
+  startsAt      DateTime?
+  endsAt        DateTime?
+  active        Boolean        @default(true)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  sector        Sector?        @relation(fields: [sectorId], references: [id], onDelete: SetNull)
+  userMissions  UserMission[]
+  xpEvents      XpEvent[]
+
+  @@index([criticality])
+  @@index([active])
+  @@index([sectorId])
+  @@index([active, startsAt, endsAt])
+  @@index([criticality, active])
+  @@map("missions")
+}
+
+model UserMission {
+  id           String        @id @default(uuid()) @db.Uuid
+  userId       String        @db.Uuid
+  missionId    String        @db.Uuid
+  status       MissionStatus @default(NOT_STARTED)
+  progress     Int           @default(0)
+  startedAt    DateTime?
+  completedAt  DateTime?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mission      Mission       @relation(fields: [missionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, missionId])
+  @@index([userId])
+  @@index([missionId])
+  @@index([status])
+  @@index([userId, status])
+  @@index([missionId, status])
+  @@index([status, updatedAt])
+  @@index([completedAt])
+  @@map("user_missions")
+}

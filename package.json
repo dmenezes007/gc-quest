@@ -6,12 +6,24 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "vitest --config vitest.config.ts",
+    "e2e": "playwright test",
+    "e2e:headed": "playwright test --headed",
+    "db:seed": "prisma db seed"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
   },
   "dependencies": {
+    "@prisma/client": "^6.15.0",
+    "@supabase/ssr": "^0.7.0",
+    "@supabase/supabase-js": "^2.57.4",
+    "@tanstack/react-query": "^5.90.21",
     "next": "16.1.6",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -21,7 +33,10 @@
     "babel-plugin-react-compiler": "1.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
+    "@playwright/test": "^1.55.0",
+    "prisma": "^6.15.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^2.1.8"
   }
 }
