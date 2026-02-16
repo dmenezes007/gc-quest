@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getServerUser } from '@/lib/supabase/session';
 import { getLeaderboard } from '@/modules/dashboard';
 import { validateRuntimeEnv } from '@/lib/env';
 import { logger } from '@/lib/logger';
@@ -15,15 +14,8 @@ export async function GET(request: Request) {
   try {
     validateRuntimeEnv({
       requireDatabase: true,
-      requireSupabase: process.env.E2E_MOCK_AUTH !== 'true',
+      requireSupabase: false,
     });
-
-    const authUser = await getServerUser();
-
-    if (!authUser) {
-      logger.warn('Unauthorized dashboard leaderboard access');
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
 
     const url = new URL(request.url);
     const parsedQuery = leaderboardQuerySchema.parse({
