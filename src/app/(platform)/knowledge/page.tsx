@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { createKnowledgeWithNotifications } from '@/modules/knowledge';
+import { subscribeToCurrentUserDataChanges } from '@/lib/supabase/realtime';
 
 type KnowledgeTypeInput = 'ARTICLE' | 'GUIDE' | 'VIDEO' | 'TEMPLATE' | 'POLICY' | 'FAQ';
 type CriticalityInput = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
@@ -70,6 +71,14 @@ export default function KnowledgePage() {
 
   useEffect(() => {
     void loadKnowledge();
+
+    const unsubscribe = subscribeToCurrentUserDataChanges(() => {
+      void loadKnowledge();
+    });
+
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   function updateField<Key extends keyof RegisterFormState>(key: Key, value: RegisterFormState[Key]) {

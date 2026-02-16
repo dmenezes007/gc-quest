@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
+import { subscribeToCurrentUserDataChanges } from '@/lib/supabase/realtime';
 
 interface ProfileAggregateData {
   user: {
@@ -43,8 +44,14 @@ export default function ProfilePage() {
     }
 
     void load();
+
+    const unsubscribe = subscribeToCurrentUserDataChanges(() => {
+      void load();
+    });
+
     return () => {
       active = false;
+      unsubscribe();
     };
   }, []);
 

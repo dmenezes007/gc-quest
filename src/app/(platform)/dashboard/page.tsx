@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { Leaderboard } from '@/components/dashboard/Leaderboard';
+import { subscribeToCurrentUserDataChanges } from '@/lib/supabase/realtime';
 
 interface DashboardAggregateData {
   user: {
@@ -56,8 +57,14 @@ export default function DashboardPage() {
     }
 
     void load();
+
+    const unsubscribe = subscribeToCurrentUserDataChanges(() => {
+      void load();
+    });
+
     return () => {
       active = false;
+      unsubscribe();
     };
   }, []);
 

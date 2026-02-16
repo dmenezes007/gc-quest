@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from 'react';
+import { subscribeToCurrentUserDataChanges } from '@/lib/supabase/realtime';
 
 interface MissionItem {
   id: string;
@@ -84,8 +85,13 @@ export default function MissionsPage() {
 
     void loadMissions();
 
+    const unsubscribe = subscribeToCurrentUserDataChanges(() => {
+      void loadMissions();
+    });
+
     return () => {
       active = false;
+      unsubscribe();
     };
   }, []);
 
