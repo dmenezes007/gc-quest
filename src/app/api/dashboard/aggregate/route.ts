@@ -117,6 +117,8 @@ export async function GET(request: Request) {
       badgeEntries,
       missionEntries,
       recentActivity,
+      knowledgeTotal,
+      validationsTotal,
       totalUsers,
       usersAbove,
     ] = await Promise.all([
@@ -182,6 +184,12 @@ export async function GET(request: Request) {
         select: { createdAt: true },
         take: 90,
       }),
+      prisma.knowledgeItem.count({
+        where: { authorId: user.id },
+      }),
+      prisma.validation.count({
+        where: { validatorId: user.id },
+      }),
       prisma.user.count(),
       prisma.user.count({
         where: {
@@ -201,6 +209,13 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
       data: {
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          sectorId: user.sectorId,
+        },
         xp: {
           total: user.totalXp,
         },
@@ -215,6 +230,12 @@ export async function GET(request: Request) {
             ...entry.badge,
             grantedAt: entry.grantedAt,
           })),
+        },
+        knowledge: {
+          total: knowledgeTotal,
+        },
+        validations: {
+          total: validationsTotal,
         },
         missions: {
           total: missionEntries.length,

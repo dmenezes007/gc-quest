@@ -4,8 +4,8 @@ import { roleRank } from './types';
 
 const ROLE_ALIASES: Record<string, AppRole> = {
   user: 'USER',
-  gestor: 'GESTOR',
-  manager: 'GESTOR',
+  gestor: 'MANAGER',
+  manager: 'MANAGER',
   admin: 'ADMIN',
 };
 

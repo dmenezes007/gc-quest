@@ -1,4 +1,53 @@
+"use client";
+
+import { useEffect, useState } from 'react';
+
+interface ProfileAggregateData {
+  user: {
+    name: string;
+    role: string;
+  };
+  xp: {
+    total: number;
+  };
+  level: {
+    current: {
+      code: string;
+      name: string;
+    } | null;
+  };
+  badges: {
+    total: number;
+  };
+}
+
 export default function ProfilePage() {
+  const [aggregate, setAggregate] = useState<ProfileAggregateData | null>(null);
+
+  useEffect(() => {
+    let active = true;
+
+    async function load() {
+      try {
+        const response = await fetch('/api/dashboard/aggregate');
+        if (!response.ok) {
+          return;
+        }
+
+        const body = (await response.json()) as { data?: ProfileAggregateData };
+        if (active && body.data) {
+          setAggregate(body.data);
+        }
+      } catch {
+      }
+    }
+
+    void load();
+    return () => {
+      active = false;
+    };
+  }, []);
+
   return (
     <section className="space-y-5">
       <header>
@@ -9,15 +58,17 @@ export default function ProfilePage() {
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
         <div className="kq-panel p-4">
           <p className="kq-heading text-[10px] text-slate-500">Current level</p>
-          <p className="mt-2 text-xl font-bold text-cyan-300">L2 • Colaborador</p>
+          <p className="mt-2 text-xl font-bold text-cyan-300">
+            {aggregate?.level?.current?.code ?? 'L1'} • {aggregate?.level?.current?.name ?? 'Iniciante'}
+          </p>
         </div>
         <div className="kq-panel p-4">
           <p className="kq-heading text-[10px] text-slate-500">Total XP</p>
-          <p className="mt-2 text-xl font-bold text-slate-100">1240</p>
+          <p className="mt-2 text-xl font-bold text-slate-100">{aggregate?.xp?.total ?? 0}</p>
         </div>
         <div className="kq-panel p-4">
           <p className="kq-heading text-[10px] text-slate-500">Unlocked badges</p>
-          <p className="mt-2 text-xl font-bold text-fuchsia-300">8</p>
+          <p className="mt-2 text-xl font-bold text-fuchsia-300">{aggregate?.badges?.total ?? 0}</p>
         </div>
       </div>
 

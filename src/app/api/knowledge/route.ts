@@ -204,6 +204,68 @@ async function ensureLocalUser(user: { id: string; email?: string; user_metadata
   });
 }
 
+export async function GET() {
+  try {
+    validateRuntimeEnv({
+      requireDatabase: true,
+      requireSupabase: process.env.E2E_MOCK_AUTH !== 'true',
+    });
+
+    const authUser = await getServerUser();
+
+    if (!authUser) {
+      logger.warn('Unauthorized knowledge list attempt');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    await ensureLocalUser({
+      id: authUser.id,
+      email: authUser.email,
+      user_metadata: authUser.user_metadata,
+    });
+
+    const items = await prisma.knowledgeItem.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+      select: {
+        id: true,
+        title: true,
+        summary: true,
+        content: true,
+        type: true,
+        criticality: true,
+        tags: true,
+        createdAt: true,
+        author: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        _count: {
+          select: {
+            validations: true,
+          },
+        },
+      },
+    });
+
+    return NextResponse.json({
+      data: {
+        items: items.map((item) => ({
+          ...item,
+          createdAt: item.createdAt.toISOString(),
+          validationsCount: item._count.validations,
+        })),
+      },
+    });
+  } catch (error) {
+    logger.error('Knowledge list route failed', error);
+    const message = error instanceof Error ? error.message : 'Unexpected error';
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}
+
 export async function POST(request: Request) {
   try {
     validateRuntimeEnv({

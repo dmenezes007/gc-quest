@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { createKnowledgeWithNotifications } from '@/modules/knowledge';
 
 type KnowledgeTypeInput = 'ARTICLE' | 'GUIDE' | 'VIDEO' | 'TEMPLATE' | 'POLICY' | 'FAQ';
@@ -13,6 +13,20 @@ interface RegisterFormState {
   criticality: CriticalityInput;
   scope: 'Individual' | 'Team' | 'Organization';
   tags: string;
+}
+
+interface KnowledgeListItem {
+  id: string;
+  title: string;
+  summary: string | null;
+  content: string;
+  criticality: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  tags: string[];
+  author: {
+    id: string;
+    name: string;
+  };
+  validationsCount: number;
 }
 
 const initialForm: RegisterFormState = {
@@ -29,6 +43,34 @@ export default function KnowledgePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [form, setForm] = useState<RegisterFormState>(initialForm);
+  const [items, setItems] = useState<KnowledgeListItem[]>([]);
+  const [isLoadingList, setIsLoadingList] = useState(true);
+  const [listError, setListError] = useState<string | null>(null);
+
+  async function loadKnowledge() {
+    try {
+      setIsLoadingList(true);
+      setListError(null);
+
+      const response = await fetch('/api/knowledge');
+      const body = (await response.json()) as { data?: { items?: KnowledgeListItem[] }; error?: string };
+
+      if (!response.ok) {
+        throw new Error(body.error ?? 'Não foi possível carregar a base de conhecimento.');
+      }
+
+      setItems(body.data?.items ?? []);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Não foi possível carregar a base de conhecimento.';
+      setListError(message);
+    } finally {
+      setIsLoadingList(false);
+    }
+  }
+
+  useEffect(() => {
+    void loadKnowledge();
+  }, []);
 
   function updateField<Key extends keyof RegisterFormState>(key: Key, value: RegisterFormState[Key]) {
     setForm((current) => ({
@@ -82,6 +124,7 @@ export default function KnowledgePage() {
         tags,
       });
 
+      await loadKnowledge();
       closeModal();
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Não foi possível publicar o conhecimento.';
@@ -109,35 +152,38 @@ export default function KnowledgePage() {
       </header>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <article className="kq-panel p-4">
-          <div className="flex items-center justify-between text-[10px] uppercase">
-            <span className="rounded bg-rose-500/20 px-2 py-0.5 text-rose-300">Critical</span>
-            <span className="text-slate-500">Processos</span>
-          </div>
-          <h2 className="mt-3 text-3xl leading-tight font-semibold text-slate-100">Customer Success Onboarding Flow v2</h2>
-          <p className="mt-2 text-sm text-slate-400">Updated steps for new enterprise clients after the 2024 CRM migration.</p>
-          <p className="mt-4 text-xs font-semibold text-cyan-300">+400 XP • Validated</p>
-        </article>
+        {isLoadingList && (
+          <div className="kq-panel p-4 text-sm text-slate-400 lg:col-span-3">Carregando conhecimentos...</div>
+        )}
 
-        <article className="kq-panel p-4">
-          <div className="flex items-center justify-between text-[10px] uppercase">
-            <span className="rounded bg-amber-500/20 px-2 py-0.5 text-amber-300">Essential</span>
-            <span className="text-slate-500">Tecnologia</span>
-          </div>
-          <h2 className="mt-3 text-3xl leading-tight font-semibold text-slate-100">Kubernetes Autoscaling Best Practices</h2>
-          <p className="mt-2 text-sm text-slate-400">Guidelines for setting up HPA and VPA in production clusters.</p>
-          <p className="mt-4 text-xs font-semibold text-cyan-300">+200 XP • Validate</p>
-        </article>
+        {listError && (
+          <div className="kq-panel p-4 text-sm text-rose-300 lg:col-span-3">{listError}</div>
+        )}
 
-        <article className="kq-panel p-4">
-          <div className="flex items-center justify-between text-[10px] uppercase">
-            <span className="rounded bg-cyan-500/20 px-2 py-0.5 text-cyan-300">Normal</span>
-            <span className="text-slate-500">Soft Skills</span>
-          </div>
-          <h2 className="mt-3 text-3xl leading-tight font-semibold text-slate-100">Remote Feedback Framework</h2>
-          <p className="mt-2 text-sm text-slate-400">A set of soft skills for giving empathetic and direct feedback.</p>
-          <p className="mt-4 text-xs font-semibold text-cyan-300">+100 XP • Validate</p>
-        </article>
+        {!isLoadingList && !listError && items.slice(0, 9).map((item) => {
+          const criticalityTone =
+            item.criticality === 'CRITICAL'
+              ? 'bg-rose-500/20 text-rose-300'
+              : item.criticality === 'HIGH'
+                ? 'bg-amber-500/20 text-amber-300'
+                : item.criticality === 'MEDIUM'
+                  ? 'bg-cyan-500/20 text-cyan-300'
+                  : 'bg-emerald-500/20 text-emerald-300';
+
+          return (
+            <article key={item.id} className="kq-panel p-4">
+              <div className="flex items-center justify-between text-[10px] uppercase">
+                <span className={`rounded px-2 py-0.5 ${criticalityTone}`}>{item.criticality}</span>
+                <span className="text-slate-500">{item.tags[0] ?? item.author.name}</span>
+              </div>
+              <h2 className="mt-3 text-3xl leading-tight font-semibold text-slate-100">{item.title}</h2>
+              <p className="mt-2 text-sm text-slate-400">{item.summary ?? item.content.slice(0, 120)}</p>
+              <p className="mt-4 text-xs font-semibold text-cyan-300">
+                {item.author.name} • {item.validationsCount} validações
+              </p>
+            </article>
+          );
+        })}
       </div>
       </section>
 

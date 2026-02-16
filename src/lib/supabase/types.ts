@@ -1,7 +1,7 @@
-export type AppRole = 'USER' | 'GESTOR' | 'ADMIN';
+export type AppRole = 'USER' | 'MANAGER' | 'ADMIN';
 
 export const roleRank: Record<AppRole, number> = {
   USER: 1,
-  GESTOR: 2,
+  MANAGER: 2,
   ADMIN: 3,
 };

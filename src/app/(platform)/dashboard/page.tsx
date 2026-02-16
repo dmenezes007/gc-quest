@@ -1,24 +1,98 @@
+"use client";
+
+import { useEffect, useMemo, useState } from 'react';
 import { Leaderboard } from '@/components/dashboard/Leaderboard';
 
+interface DashboardAggregateData {
+  user: {
+    name: string;
+  };
+  xp: {
+    total: number;
+  };
+  level: {
+    current: {
+      code: string;
+    } | null;
+    next: {
+      minXp: number;
+    } | null;
+    xpToNextLevel: number | null;
+  };
+  badges: {
+    total: number;
+  };
+  knowledge: {
+    total: number;
+  };
+  validations: {
+    total: number;
+  };
+  leaderboard: {
+    position: number;
+    totalUsers: number;
+  };
+}
+
 export default function DashboardPage() {
+  const [aggregate, setAggregate] = useState<DashboardAggregateData | null>(null);
+
+  useEffect(() => {
+    let active = true;
+
+    async function load() {
+      try {
+        const response = await fetch('/api/dashboard/aggregate');
+        if (!response.ok) {
+          return;
+        }
+
+        const body = (await response.json()) as { data?: DashboardAggregateData };
+        if (active && body.data) {
+          setAggregate(body.data);
+        }
+      } catch {
+      }
+    }
+
+    void load();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const userName = aggregate?.user?.name ?? 'Guest';
+  const rankPosition = aggregate?.leaderboard?.position ?? 0;
+  const rankTotalUsers = aggregate?.leaderboard?.totalUsers ?? 0;
+  const knowledgeTotal = aggregate?.knowledge?.total ?? 0;
+  const xpTotal = aggregate?.xp?.total ?? 0;
+  const nextLevelMinXp = aggregate?.level?.next?.minXp ?? Math.max(100, xpTotal + 100);
+  const progressPercent = useMemo(() => {
+    if (nextLevelMinXp <= 0) {
+      return 0;
+    }
+
+    return Math.max(0, Math.min(100, Math.round((xpTotal / nextLevelMinXp) * 100)));
+  }, [nextLevelMinXp, xpTotal]);
+
   return (
     <div className="space-y-6">
       <section className="rounded-2xl border border-cyan-900/35 bg-[linear-gradient(120deg,#121739_0%,#0e1a3a_55%,#0b4f63_100%)] p-8 shadow-lg shadow-cyan-950/10">
         <p className="kq-heading text-xs font-semibold tracking-[0.12em] text-cyan-300">Agent ready</p>
-        <h1 className="kq-heading mt-2 text-5xl font-extrabold leading-[0.95] text-slate-100">Welcome back, Alex</h1>
+        <h1 className="kq-heading mt-2 text-5xl font-extrabold leading-[0.95] text-slate-100">Welcome back, {userName}</h1>
 
         <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
           <div className="rounded-xl border border-[#2b365d] bg-[#1a2343]/80 p-4">
             <p className="kq-heading text-[10px] uppercase text-slate-400">Rank position</p>
-            <p className="mt-2 text-2xl font-bold text-slate-100">#04 / 450</p>
+            <p className="mt-2 text-2xl font-bold text-slate-100">#{rankPosition} / {rankTotalUsers}</p>
           </div>
           <div className="rounded-xl border border-[#2b365d] bg-[#1a2343]/80 p-4">
             <p className="kq-heading text-[10px] uppercase text-slate-400">Level progress</p>
-            <p className="mt-2 text-2xl font-bold text-slate-100">74%</p>
+            <p className="mt-2 text-2xl font-bold text-slate-100">{progressPercent}%</p>
           </div>
           <div className="rounded-xl border border-[#2b365d] bg-[#1a2343]/80 p-4">
             <p className="kq-heading text-[10px] uppercase text-slate-400">Knowledge assets</p>
-            <p className="mt-2 text-2xl font-bold text-slate-100">28</p>
+            <p className="mt-2 text-2xl font-bold text-slate-100">{knowledgeTotal}</p>
           </div>
         </div>
       </section>
@@ -66,16 +140,16 @@ export default function DashboardPage() {
         <aside className="space-y-4">
           <section className="kq-panel p-5 text-center">
             <div className="mx-auto h-16 w-16 rounded-full border-2 border-cyan-400 bg-[radial-gradient(circle_at_35%_35%,#22d3ee,#1f2937)]" />
-            <p className="kq-heading mt-4 text-2xl font-bold text-slate-100">Alex Sterling</p>
+            <p className="kq-heading mt-4 text-2xl font-bold text-slate-100">{userName}</p>
             <p className="text-sm text-slate-400">Technology Unit</p>
             <div className="mt-4 grid grid-cols-2 gap-2 text-center">
               <div className="rounded-lg border border-slate-700 bg-slate-950/60 p-3">
                 <p className="text-xs uppercase text-slate-500">Validations</p>
-                <p className="mt-1 font-semibold text-cyan-300">42</p>
+                <p className="mt-1 font-semibold text-cyan-300">{aggregate?.validations?.total ?? 0}</p>
               </div>
               <div className="rounded-lg border border-slate-700 bg-slate-950/60 p-3">
                 <p className="text-xs uppercase text-slate-500">XP streak</p>
-                <p className="mt-1 font-semibold text-fuchsia-300">12</p>
+                <p className="mt-1 font-semibold text-fuchsia-300">{aggregate?.badges?.total ?? 0}</p>
               </div>
             </div>
           </section>

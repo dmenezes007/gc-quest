@@ -2,10 +2,34 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 
 interface KQuestShellProps {
   children: ReactNode;
+}
+
+interface AggregateSummary {
+  user: {
+    id: string;
+    name: string;
+    role: string;
+  };
+  xp: {
+    total: number;
+  };
+  level: {
+    current: {
+      code: string;
+    } | null;
+    next: {
+      minXp: number;
+    } | null;
+    xpToNextLevel: number | null;
+  };
+  streak: {
+    current: number;
+  };
 }
 
 const navItems = [
@@ -24,6 +48,45 @@ function isActivePath(pathname: string, href: string): boolean {
 
 export function KQuestShell({ children }: KQuestShellProps) {
   const pathname = usePathname();
+  const [aggregate, setAggregate] = useState<AggregateSummary | null>(null);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadAggregate() {
+      try {
+        const response = await fetch('/api/dashboard/aggregate');
+        if (!response.ok) {
+          return;
+        }
+
+        const body = (await response.json()) as { data?: AggregateSummary };
+        if (active && body.data) {
+          setAggregate(body.data);
+        }
+      } catch {
+      }
+    }
+
+    void loadAggregate();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const userName = aggregate?.user?.name ?? 'Guest User';
+  const userRole = aggregate?.user?.role ?? 'USER';
+  const levelCode = aggregate?.level?.current?.code ?? 'L1';
+  const totalXp = aggregate?.xp?.total ?? 0;
+  const nextLevelXp = aggregate?.level?.next?.minXp ?? Math.max(100, totalXp + 100);
+  const streakDays = aggregate?.streak?.current ?? 0;
+  const progressPercent = useMemo(() => {
+    if (!aggregate?.level?.next?.minXp || aggregate.level.next.minXp <= 0) {
+      return 0;
+    }
+
+    return Math.max(0, Math.min(100, Math.round((totalXp / aggregate.level.next.minXp) * 100)));
+  }, [aggregate, totalXp]);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -77,18 +140,18 @@ export function KQuestShell({ children }: KQuestShellProps) {
                 Search knowledge base...
               </div>
               <div className="flex items-center gap-4 text-sm">
-                <div className="kq-pill rounded-full px-3 py-1 font-semibold">🔥 12d</div>
+                <div className="kq-pill rounded-full px-3 py-1 font-semibold">🔥 {streakDays}d</div>
                 <div className="flex items-center gap-2 text-xs text-slate-300">
                   <span className="kq-muted">LVL</span>
-                  <span className="font-semibold text-cyan-300">4</span>
+                  <span className="font-semibold text-cyan-300">{levelCode}</span>
                   <span className="h-1.5 w-28 rounded-full bg-[#13203f]">
-                    <span className="block h-full w-2/3 rounded-full bg-cyan-400" />
+                    <span className="block h-full rounded-full bg-cyan-400" style={{ width: `${progressPercent}%` }} />
                   </span>
-                  <span className="kq-muted">1240 / 1687 XP</span>
+                  <span className="kq-muted">{totalXp} / {nextLevelXp} XP</span>
                 </div>
                 <div className="text-right">
-                  <p className="font-semibold text-slate-200">Alex Sterling</p>
-                  <p className="text-xs text-slate-400">ADMIN</p>
+                  <p className="font-semibold text-slate-200">{userName}</p>
+                  <p className="text-xs text-slate-400">{userRole}</p>
                 </div>
                 <div className="h-7 w-7 rounded-full border border-cyan-500/60 bg-[radial-gradient(circle_at_30%_30%,#38bdf8,#0f172a)]" />
               </div>
