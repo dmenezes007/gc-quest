@@ -1,42 +1,23 @@
 export default function ProfilePage() {
   return (
-    <main className="mx-auto w-full max-w-4xl p-6">
-      <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h1 className="text-2xl font-bold text-slate-900">Perfil</h1>
-        <p className="mt-2 text-sm text-slate-600">
-          Visão geral do usuário e atalhos para acompanhar sua evolução na plataforma.
-        </p>
+    <section className="rounded-xl border border-slate-800 bg-slate-900/70 p-6">
+      <h1 className="text-2xl font-bold text-slate-100">Profile</h1>
+      <p className="mt-2 text-sm text-slate-400">Painel pessoal com evolução, badges e atalhos operacionais.</p>
 
-        <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Nível atual</p>
-            <p className="mt-2 text-lg font-semibold text-slate-900">Iniciante</p>
-          </div>
-          <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">XP total</p>
-            <p className="mt-2 text-lg font-semibold text-slate-900">0</p>
-          </div>
-          <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Badges</p>
-            <p className="mt-2 text-lg font-semibold text-slate-900">0 desbloqueadas</p>
-          </div>
+      <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-3">
+        <div className="rounded-lg border border-slate-700 bg-slate-950/70 p-4">
+          <p className="text-xs uppercase text-slate-500">Current level</p>
+          <p className="mt-2 text-xl font-bold text-cyan-300">L2 • Colaborador</p>
         </div>
-
-        <div className="mt-6 flex flex-wrap gap-3">
-          <a
-            href="/dashboard"
-            className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
-          >
-            Ver dashboard
-          </a>
-          <a
-            href="/knowledge"
-            className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-          >
-            Explorar conhecimento
-          </a>
+        <div className="rounded-lg border border-slate-700 bg-slate-950/70 p-4">
+          <p className="text-xs uppercase text-slate-500">Total XP</p>
+          <p className="mt-2 text-xl font-bold text-slate-100">1240</p>
         </div>
-      </section>
-    </main>
+        <div className="rounded-lg border border-slate-700 bg-slate-950/70 p-4">
+          <p className="text-xs uppercase text-slate-500">Unlocked badges</p>
+          <p className="mt-2 text-xl font-bold text-fuchsia-300">8</p>
+        </div>
+      </div>
+    </section>
   );
 }
