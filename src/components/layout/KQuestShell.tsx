@@ -71,8 +71,8 @@ export function KQuestShell({ children }: KQuestShellProps) {
           <div className="h-8 border-b border-[#17233f] text-center text-xs leading-8 text-slate-400">
             K-Quest: Gamified Knowledge Management
           </div>
-          <header className="px-6 py-3 backdrop-blur">
-            <div className="flex flex-wrap items-center justify-between gap-3">
+          <header className="px-8 py-3 backdrop-blur lg:px-12">
+            <div className="mx-auto flex w-full max-w-[1180px] flex-wrap items-center justify-between gap-3">
               <div className="w-full max-w-md rounded-xl border border-[#23365f] bg-[#0a1633] px-3 py-2 text-sm text-slate-400">
                 Search knowledge base...
               </div>
@@ -96,7 +96,9 @@ export function KQuestShell({ children }: KQuestShellProps) {
           </header>
         </div>
 
-        <main className="px-6 py-6">{children}</main>
+        <main className="px-8 py-6 lg:px-12">
+          <div className="mx-auto w-full max-w-[1180px]">{children}</div>
+        </main>
       </div>
     </div>
   );
